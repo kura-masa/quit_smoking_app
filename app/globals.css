@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .success-gradient {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  }
+  
+  .danger-gradient {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  }
+}
