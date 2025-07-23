@@ -20,14 +20,14 @@ const DevControls: React.FC<DevControlsProps> = ({ user, onDateChange }) => {
   console.log('DevControls - isDevAccount:', isDevAccount(user));
   console.log('DevControls - user.screenName:', user.screenName);
   console.log('DevControls - user.twitterId:', user.twitterId);
-  
+
   // 開発用アカウントでない場合は何も表示しない
   if (!isDevAccount(user)) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
         <div className="bg-yellow-500 text-black p-2 rounded text-xs">
-          デバッグ: 開発用アカウントではありません<br/>
-          screenName: {user.screenName}<br/>
+          デバッグ: 開発用アカウントではありませんヨヨヨ<br />
+          screenName: {user.screenName}<br />
           twitterId: {user.twitterId}
         </div>
       </div>
@@ -49,13 +49,13 @@ const DevControls: React.FC<DevControlsProps> = ({ user, onDateChange }) => {
   const devDate = getDevDate();
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999]" style={{position: 'fixed', bottom: '16px', right: '16px', zIndex: 9999}}>
+    <div className="fixed bottom-4 right-4 z-[9999]" style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 9999 }}>
       {!isExpanded ? (
         <button
           onClick={() => setIsExpanded(true)}
           className="bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors"
           title="開発者コントロール"
-          style={{backgroundColor: '#dc2626', color: 'white', padding: '12px', borderRadius: '50%', border: 'none', cursor: 'pointer'}}
+          style={{ backgroundColor: '#dc2626', color: 'white', padding: '12px', borderRadius: '50%', border: 'none', cursor: 'pointer' }}
         >
           <Calendar className="w-6 h-6" />
         </button>
@@ -70,13 +70,13 @@ const DevControls: React.FC<DevControlsProps> = ({ user, onDateChange }) => {
               ✕
             </button>
           </div>
-          
+
           <div className="space-y-3">
             <div className="text-sm">
               <p><strong>現在の日付:</strong> {devDate.toLocaleDateString('ja-JP')}</p>
               <p><strong>オフセット:</strong> {currentOffset > 0 ? `+${currentOffset}日` : '通常'}</p>
             </div>
-            
+
             <div className="flex gap-2">
               <Button
                 onClick={handleAdvanceDate}
@@ -85,7 +85,7 @@ const DevControls: React.FC<DevControlsProps> = ({ user, onDateChange }) => {
                 <FastForward className="w-4 h-4 mr-1" />
                 +1日
               </Button>
-              
+
               <Button
                 onClick={handleResetDate}
                 className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm py-2"
@@ -94,7 +94,7 @@ const DevControls: React.FC<DevControlsProps> = ({ user, onDateChange }) => {
                 リセット
               </Button>
             </div>
-            
+
             <p className="text-xs text-gray-500">
               ⚠️ 開発用機能：日付を進めてテストできます
             </p>
