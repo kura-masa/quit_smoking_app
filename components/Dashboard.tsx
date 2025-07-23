@@ -10,7 +10,9 @@ import Button from '@/components/ui/Button';
 import Calendar from '@/components/ui/Calendar';
 import Badge from '@/components/ui/Badge';
 import ChallengeSetupModal from '@/components/ChallengeSetupModal';
+import DevControls from '@/components/DevControls';
 import { differenceInDays, format } from 'date-fns';
+import { getDevDate, isDevAccount } from '@/lib/dev-utils';
 
 interface DashboardProps {
   user: User;
@@ -42,8 +44,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     }
   };
 
+  // 開発用日付変更時の再読み込み
+  const handleDevDateChange = () => {
+    loadChallengeData();
+  };
+
   const handleSignOut = async () => {
     try {
+      // テスト用ユーザーの場合はローカルストレージをクリア
+      if (localStorage.getItem('testUser')) {
+        localStorage.removeItem('testUser');
+        window.location.reload();
+        return;
+      }
+      
       await signOut();
     } catch (error) {
       console.error('サインアウトエラー:', error);
@@ -79,6 +93,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   }
 
   return (
+    <>
+      {/* 開発者コントロール */}
+      <DevControls user={user} onDateChange={handleDevDateChange} />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
@@ -280,6 +297,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         userId={user.uid}
       />
     </div>
+    </>
   );
 };
 

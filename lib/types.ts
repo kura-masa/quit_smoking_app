@@ -23,6 +23,7 @@ export interface Challenge {
 
 export interface SuccessLog {
   challengeId: string;
+  userId: string;
   date: string; // YYYY-MM-DD format
   reportedAt: Date;
 }

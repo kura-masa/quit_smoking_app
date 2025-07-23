@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle, Calendar, Trophy, Sparkles } from 'lucide-react';
@@ -11,7 +11,7 @@ import ConfettiAnimation from '@/components/ui/ConfettiAnimation';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
-export default function ReportSuccessPage() {
+function ReportSuccessPageContent() {
   const searchParams = useSearchParams();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +57,7 @@ export default function ReportSuccessPage() {
 
     try {
       setReporting(true);
-      await reportSuccess(challengeId, date);
+      await reportSuccess(challengeId, userId!, date);
       setReported(true);
       setShowConfetti(true);
       
@@ -249,5 +249,20 @@ export default function ReportSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReportSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <ReportSuccessPageContent />
+    </Suspense>
   );
 }

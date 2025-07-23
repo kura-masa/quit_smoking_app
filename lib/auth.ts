@@ -1,21 +1,27 @@
-import { signInWithPopup, signOut as firebaseSignOut, User as FirebaseUser } from 'firebase/auth';
+import { signInWithPopup, signOut as firebaseSignOut, User as FirebaseUser, TwitterAuthProvider } from 'firebase/auth'; // TwitterAuthProvider をインポート
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, twitterProvider, db } from './firebase';
 import { User } from './types';
 
 export const signInWithTwitter = async (): Promise<User | null> => {
   try {
+    console.log('Twitter認証を開始...');
     const result = await signInWithPopup(auth, twitterProvider);
-    const credential = result.credential;
+    console.log('認証結果:', result);
+
+    const twitterCredential = TwitterAuthProvider.credentialFromResult(result);
     const user = result.user;
 
-    if (!credential || !user) {
-      throw new Error('認証に失敗しました');
+    console.log('Twitter credential:', twitterCredential);
+    console.log('User:', user);
+
+    if (!user) {
+      throw new Error('ユーザー情報の取得に失敗しました');
     }
 
-    // Twitter認証情報を取得
-    const accessToken = (credential as any).accessToken;
-    const secret = (credential as any).secret;
+    // Twitter認証情報を取得（credentialがnullの場合もあるため、デフォルト値を設定）
+    const accessToken = twitterCredential?.accessToken || '';
+    const secret = twitterCredential?.secret || '';
 
     // ユーザー情報を構築
     const userData: User = {
@@ -33,9 +39,38 @@ export const signInWithTwitter = async (): Promise<User | null> => {
     await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
 
     return userData;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Twitter認証エラー:', error);
-    throw error;
+    
+    // エラーの詳細情報をログ出力
+    if (error.code) {
+      console.error('エラーコード:', error.code);
+    }
+    if (error.message) {
+      console.error('エラーメッセージ:', error.message);
+    }
+    
+    // より具体的なエラーメッセージを提供
+    let userFriendlyMessage = 'Twitter認証に失敗しました。';
+    
+    switch (error.code) {
+      case 'auth/invalid-credential':
+        userFriendlyMessage = 'Twitter認証の設定に問題があります。Firebase ConsoleでTwitter認証が正しく設定されているか確認してください。';
+        break;
+      case 'auth/popup-closed-by-user':
+        userFriendlyMessage = '認証がキャンセルされました。';
+        break;
+      case 'auth/popup-blocked':
+        userFriendlyMessage = 'ポップアップがブロックされました。ブラウザの設定を確認してください。';
+        break;
+      case 'auth/cancelled-popup-request':
+        userFriendlyMessage = '認証リクエストがキャンセルされました。';
+        break;
+      default:
+        userFriendlyMessage = `認証エラー: ${error.message || '不明なエラーが発生しました'}`;
+    }
+    
+    throw new Error(userFriendlyMessage);
   }
 };
 

@@ -55,15 +55,43 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
+              className="space-y-4"
             >
               <Button
                 onClick={onSignIn}
                 size="lg"
-                className="bg-white text-primary-600 hover:bg-gray-100 text-xl px-8 py-4 shadow-xl"
+                className="bg-white text-primary-600 hover:bg-gray-100 text-xl px-8 py-4 shadow-xl w-full"
               >
                 <Twitter className="w-6 h-6 mr-3" />
                 Twitterでチャレンジを開始
               </Button>
+              
+              <div className="text-center">
+                <p className="text-white/80 text-sm mb-2">
+                  Twitter設定中のため、テスト用ログインも利用可能
+                </p>
+                <Button
+                  onClick={() => {
+                    // テスト用のダミーユーザーデータを作成
+                    const testUser = {
+                      uid: 'test-user-' + Date.now(),
+                      twitterId: 'test_user',
+                      screenName: 'test_user',
+                      displayName: 'テストユーザー',
+                      profileImageUrl: 'https://via.placeholder.com/100',
+                      createdAt: new Date(),
+                    };
+                    // ローカルストレージに保存（実際のアプリでは使用しない）
+                    localStorage.setItem('testUser', JSON.stringify(testUser));
+                    window.location.reload();
+                  }}
+                  variant="secondary"
+                  size="lg"
+                  className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                >
+                  テスト用ログイン（開発用）
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         </div>

@@ -12,8 +12,17 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // テスト用ユーザーチェック
+    const testUser = localStorage.getItem('testUser');
+    if (testUser) {
+      setUser(JSON.parse(testUser));
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
       
@@ -37,11 +46,12 @@ export default function Home() {
   const handleSignIn = async () => {
     try {
       setLoading(true);
+      setError(null);
       const userData = await signInWithTwitter();
       setUser(userData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('サインインエラー:', error);
-      alert('サインインに失敗しました。もう一度お試しください。');
+      setError(error.message || 'サインインに失敗しました。もう一度お試しください。');
     } finally {
       setLoading(false);
     }
@@ -53,6 +63,29 @@ export default function Home() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">認証エラー</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(false);
+              }}
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              戻る
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -1,19 +1,23 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
+// lib/challenge.ts
+
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
   limit,
   updateDoc,
-  addDoc 
+  addDoc,
+  Timestamp
 } from 'firebase/firestore';
-import { db } from './firebase';
-import { Challenge, SuccessLog } from './types';
-import { format, addDays, differenceInDays } from 'date-fns';
+import { db } from './firebase'; // dbのパスが正しいことを確認してください
+import { Challenge, SuccessLog } from './types'; // types.tsからChallengeとSuccessLogをインポート
+import { differenceInDays } from 'date-fns'; // date-fnsはそのまま使用します
+import { getDevDate } from './dev-utils';
 
 export const createChallenge = async (userId: string, realName: string): Promise<Challenge> => {
   try {
@@ -24,23 +28,24 @@ export const createChallenge = async (userId: string, realName: string): Promise
       where('status', '==', 'active'),
       limit(1)
     );
-    
+
     const existingChallenges = await getDocs(existingChallengeQuery);
     if (!existingChallenges.empty) {
       throw new Error('既にアクティブなチャレンジが存在します');
     }
 
-    const challengeData: Omit<Challenge, 'id'> = {
+    // Firestoreに保存するデータ
+    const challengeData = {
       userId,
       realName,
-      startDate: new Date(),
-      status: 'active',
+      startDate: getDevDate(),
+      status: 'active' as const,
       currentDay: 1,
-      createdAt: new Date(),
+      createdAt: getDevDate(),
     };
 
     const docRef = await addDoc(collection(db, 'challenges'), challengeData);
-    
+
     return {
       id: docRef.id,
       ...challengeData,
@@ -60,18 +65,20 @@ export const getCurrentChallenge = async (userId: string): Promise<Challenge | n
       orderBy('createdAt', 'desc'),
       limit(1)
     );
-    
+
     const challenges = await getDocs(challengeQuery);
     if (challenges.empty) {
       return null;
     }
 
     const challengeDoc = challenges.docs[0];
+    const data = challengeDoc.data();
+
     return {
       id: challengeDoc.id,
-      ...challengeDoc.data(),
-      startDate: challengeDoc.data().startDate.toDate(),
-      createdAt: challengeDoc.data().createdAt.toDate(),
+      ...data,
+      startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
     } as Challenge;
   } catch (error) {
     console.error('現在のチャレンジ取得エラー:', error);
@@ -79,12 +86,13 @@ export const getCurrentChallenge = async (userId: string): Promise<Challenge | n
   }
 };
 
-export const reportSuccess = async (challengeId: string, date: string): Promise<void> => {
+export const reportSuccess = async (challengeId: string, userId: string, date: string): Promise<void> => {
   try {
     const successLogData: SuccessLog = {
       challengeId,
+      userId,
       date,
-      reportedAt: new Date(),
+      reportedAt: getDevDate(),
     };
 
     await setDoc(
@@ -95,11 +103,14 @@ export const reportSuccess = async (challengeId: string, date: string): Promise<
     // チャレンジの現在の日数を更新
     const challengeRef = doc(db, 'challenges', challengeId);
     const challengeDoc = await getDoc(challengeRef);
-    
+
     if (challengeDoc.exists()) {
-      const challenge = challengeDoc.data() as Challenge;
-      const daysSinceStart = differenceInDays(new Date(), challenge.startDate.toDate()) + 1;
-      
+      const challengeDataFromFirestore = challengeDoc.data();
+      const startDate = challengeDataFromFirestore.startDate instanceof Timestamp 
+        ? challengeDataFromFirestore.startDate.toDate() 
+        : challengeDataFromFirestore.startDate;
+      const daysSinceStart = differenceInDays(getDevDate(), startDate) + 1;
+
       await updateDoc(challengeRef, {
         currentDay: daysSinceStart
       });
@@ -108,7 +119,7 @@ export const reportSuccess = async (challengeId: string, date: string): Promise<
       if (daysSinceStart >= 30) {
         await updateDoc(challengeRef, {
           status: 'completed',
-          completedAt: new Date()
+          completedAt: getDevDate()
         });
       }
     }
@@ -125,12 +136,15 @@ export const getSuccessLogs = async (challengeId: string): Promise<SuccessLog[]>
       where('challengeId', '==', challengeId),
       orderBy('date', 'asc')
     );
-    
+
     const logs = await getDocs(logsQuery);
-    return logs.docs.map(doc => ({
-      ...doc.data(),
-      reportedAt: doc.data().reportedAt.toDate(),
-    })) as SuccessLog[];
+    return logs.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        reportedAt: data.reportedAt instanceof Timestamp ? data.reportedAt.toDate() : data.reportedAt,
+      };
+    }) as SuccessLog[];
   } catch (error) {
     console.error('成功ログ取得エラー:', error);
     return [];
