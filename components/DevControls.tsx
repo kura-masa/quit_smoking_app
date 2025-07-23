@@ -21,19 +21,6 @@ const DevControls: React.FC<DevControlsProps> = ({ user, onDateChange }) => {
   console.log('DevControls - user.screenName:', user.screenName);
   console.log('DevControls - user.twitterId:', user.twitterId);
 
-  // 開発用アカウントでない場合は何も表示しない
-  if (!isDevAccount(user)) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <div className="bg-yellow-500 text-black p-2 rounded text-xs">
-          デバッグ: 開発用アカウントではありませんヨヨヨ<br />
-          screenName: {user.screenName}<br />
-          twitterId: {user.twitterId}
-        </div>
-      </div>
-    );
-  }
-
   const handleAdvanceDate = () => {
     advanceDevDate();
     setCurrentOffset(getDevDateOffset());
