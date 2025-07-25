@@ -3,15 +3,11 @@ import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'fireb
 import { isDevAccount } from '@/lib/dev-utils';
 import { format, subDays } from 'date-fns';
 
-// Lazy import Firebase to avoid initialization during build
-let db: any;
-async function getFirebaseDb() {
-  if (!db) {
-    const { db: firebaseDb } = await import('@/lib/firebase');
-    db = firebaseDb;
-  }
-  return db;
-}
+// Import Firebase getter function
+import { getFirebaseDb } from '@/lib/firebase';
+
+// Disable static generation for this API route
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +22,16 @@ export async function POST(request: NextRequest) {
     }
 
     // ユーザー情報を取得して開発者アカウントかチェック
-    const firebaseDb = await getFirebaseDb();
+    let firebaseDb;
+    try {
+      firebaseDb = getFirebaseDb();
+    } catch (error) {
+      console.error('Firebase initialization failed:', error);
+      return NextResponse.json(
+        { success: false, error: 'Firebase初期化エラー' },
+        { status: 500 }
+      );
+    }
     const userDoc = await getDoc(doc(firebaseDb, 'users', userId));
     if (!userDoc.exists()) {
       return NextResponse.json(
@@ -71,7 +76,13 @@ async function executeFailureCheckBatch() {
 
   try {
     // アクティブなチャレンジを取得
-    const firebaseDb = await getFirebaseDb();
+    let firebaseDb;
+    try {
+      firebaseDb = getFirebaseDb();
+    } catch (error) {
+      console.error('Firebase initialization failed in batch:', error);
+      throw new Error('Firebase初期化エラー');
+    }
     const challengesQuery = query(
       collection(firebaseDb, 'challenges'),
       where('status', '==', 'active')

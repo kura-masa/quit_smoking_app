@@ -1,11 +1,13 @@
 import { signInWithPopup, signOut as firebaseSignOut, User as FirebaseUser, TwitterAuthProvider } from 'firebase/auth'; // TwitterAuthProvider をインポート
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, twitterProvider, db } from './firebase';
+import { getFirebaseAuth, getTwitterProvider, getFirebaseDb } from './firebase';
 import { User } from './types';
 
 export const signInWithTwitter = async (): Promise<User | null> => {
   try {
     console.log('Twitter認証を開始...');
+    const auth = getFirebaseAuth();
+    const twitterProvider = getTwitterProvider();
     const result = await signInWithPopup(auth, twitterProvider);
     console.log('認証結果:', result);
 
@@ -36,6 +38,7 @@ export const signInWithTwitter = async (): Promise<User | null> => {
     };
 
     // Firestoreにユーザー情報を保存
+    const db = getFirebaseDb();
     await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
 
     return userData;
@@ -76,6 +79,7 @@ export const signInWithTwitter = async (): Promise<User | null> => {
 
 export const signOut = async (): Promise<void> => {
   try {
+    const auth = getFirebaseAuth();
     await firebaseSignOut(auth);
   } catch (error) {
     console.error('サインアウトエラー:', error);
@@ -85,6 +89,7 @@ export const signOut = async (): Promise<void> => {
 
 export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User | null> => {
   try {
+    const db = getFirebaseDb();
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     if (userDoc.exists()) {
       return userDoc.data() as User;

@@ -14,13 +14,14 @@ import {
   addDoc,
   Timestamp
 } from 'firebase/firestore';
-import { db } from './firebase'; // dbのパスが正しいことを確認してください
+import { getFirebaseDb } from './firebase';
 import { Challenge, SuccessLog } from './types'; // types.tsからChallengeとSuccessLogをインポート
 import { differenceInDays } from 'date-fns'; // date-fnsはそのまま使用します
 import { getDevDate } from './dev-utils';
 
 export const createChallenge = async (userId: string, realName: string): Promise<Challenge> => {
   try {
+    const db = getFirebaseDb();
     // 既存のアクティブなチャレンジがないかチェック
     const existingChallengeQuery = query(
       collection(db, 'challenges'),
@@ -58,6 +59,7 @@ export const createChallenge = async (userId: string, realName: string): Promise
 
 export const getCurrentChallenge = async (userId: string): Promise<Challenge | null> => {
   try {
+    const db = getFirebaseDb();
     const challengeQuery = query(
       collection(db, 'challenges'),
       where('userId', '==', userId),
@@ -88,6 +90,7 @@ export const getCurrentChallenge = async (userId: string): Promise<Challenge | n
 
 export const reportSuccess = async (challengeId: string, userId: string, date: string): Promise<void> => {
   try {
+    const db = getFirebaseDb();
     const successLogData: SuccessLog = {
       challengeId,
       userId,
@@ -131,6 +134,7 @@ export const reportSuccess = async (challengeId: string, userId: string, date: s
 
 export const getSuccessLogs = async (challengeId: string): Promise<SuccessLog[]> => {
   try {
+    const db = getFirebaseDb();
     const logsQuery = query(
       collection(db, 'successLogs'),
       where('challengeId', '==', challengeId),
