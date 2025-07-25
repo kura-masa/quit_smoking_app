@@ -2,7 +2,7 @@
 const nextConfig = {
   // `undici`をトランスパイル対象に追加します
   transpilePackages: ['undici'],
-  output: 'export',
+  // output: 'export', // Commented out to enable API routes for Firebase App Hosting
   // 既存の画像ドメイン設定はそのまま残します
   images: {
     domains: ['pbs.twimg.com', 'abs.twimg.com'],
