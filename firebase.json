@@ -23,7 +23,7 @@
     "indexes": "firestore.indexes.json"
   },
   "apphosting": {
-    "backendId": "my-web-app",
+    "backendId": "quit-smoking-backend",
     "rootDir": "/",
     "ignore": [
       "node_modules",

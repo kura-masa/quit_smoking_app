@@ -54,17 +54,22 @@ let db: any = null;
 let twitterProvider: any = null;
 
 function initializeFirebase() {
-  // Skip initialization during build time
+  // Skip initialization during build time (but allow it in browser)
   if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.FIREBASE_WEBAPP_CONFIG) {
     throw new Error('Firebase not available during build time');
   }
   
   if (!app) {
-    const firebaseConfig = getFirebaseConfig();
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    auth = getAuth(app);
-    db = getFirestore(app);
-    twitterProvider = new TwitterAuthProvider();
+    try {
+      const firebaseConfig = getFirebaseConfig();
+      app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+      auth = getAuth(app);
+      db = getFirestore(app);
+      twitterProvider = new TwitterAuthProvider();
+    } catch (error) {
+      console.error('Firebase initialization failed:', error);
+      throw error;
+    }
   }
   return { app, auth, db, twitterProvider };
 }

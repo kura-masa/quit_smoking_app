@@ -28,7 +28,12 @@ export default function Home() {
     
     const initAuth = async () => {
       try {
-        const { auth } = await import('@/lib/firebase');
+        const { getFirebaseAuth } = await import('@/lib/firebase');
+        const auth = getFirebaseAuth();
+        
+        if (!auth) {
+          throw new Error('Firebase Auth initialization failed');
+        }
         
         unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           setFirebaseUser(firebaseUser);
@@ -39,6 +44,7 @@ export default function Home() {
               setUser(userData);
             } catch (error) {
               console.error('ユーザー情報取得エラー:', error);
+              setError('ユーザー情報の取得に失敗しました');
             }
           } else {
             setUser(null);
@@ -48,6 +54,7 @@ export default function Home() {
         });
       } catch (error) {
         console.error('Firebase初期化エラー:', error);
+        setError('Firebase初期化に失敗しました。設定を確認してください。');
         setLoading(false);
       }
     };
