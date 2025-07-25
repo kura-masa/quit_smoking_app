@@ -57,6 +57,14 @@ export const advanceDevDate = (): void => {
 };
 
 /**
+ * 開発用日付を1日戻す
+ */
+export const rewindDevDate = (): void => {
+  const currentOffset = getDevDateOffset();
+  setDevDateOffset(currentOffset - 1);
+};
+
+/**
  * 開発用日付をリセット
  */
 export const resetDevDate = (): void => {
