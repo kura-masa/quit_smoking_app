@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+// Firebase auth will be imported dynamically in useEffect
 import { getCurrentUser, signInWithTwitter } from '@/lib/auth';
 import { User } from '@/lib/types';
 import LandingPage from '@/components/LandingPage';
@@ -23,24 +23,42 @@ export default function Home() {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
-      
-      if (firebaseUser) {
-        try {
-          const userData = await getCurrentUser(firebaseUser);
-          setUser(userData);
-        } catch (error) {
-          console.error('ユーザー情報取得エラー:', error);
-        }
-      } else {
-        setUser(null);
+    // Dynamically import Firebase auth to avoid build-time initialization
+    let unsubscribe: (() => void) | undefined;
+    
+    const initAuth = async () => {
+      try {
+        const { auth } = await import('@/lib/firebase');
+        
+        unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          setFirebaseUser(firebaseUser);
+          
+          if (firebaseUser) {
+            try {
+              const userData = await getCurrentUser(firebaseUser);
+              setUser(userData);
+            } catch (error) {
+              console.error('ユーザー情報取得エラー:', error);
+            }
+          } else {
+            setUser(null);
+          }
+          
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Firebase初期化エラー:', error);
+        setLoading(false);
       }
-      
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    initAuth();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const handleSignIn = async () => {

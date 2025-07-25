@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { isDevAccount } from '@/lib/dev-utils';
 import { format, subDays } from 'date-fns';
+
+// Lazy import Firebase to avoid initialization during build
+let db: any;
+async function getFirebaseDb() {
+  if (!db) {
+    const { db: firebaseDb } = await import('@/lib/firebase');
+    db = firebaseDb;
+  }
+  return db;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +26,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ユーザー情報を取得して開発者アカウントかチェック
-    const userDoc = await getDoc(doc(db, 'users', userId));
+    const firebaseDb = await getFirebaseDb();
+    const userDoc = await getDoc(doc(firebaseDb, 'users', userId));
     if (!userDoc.exists()) {
       return NextResponse.json(
         { success: false, error: 'ユーザーが見つかりません' },
@@ -61,8 +71,9 @@ async function executeFailureCheckBatch() {
 
   try {
     // アクティブなチャレンジを取得
+    const firebaseDb = await getFirebaseDb();
     const challengesQuery = query(
-      collection(db, 'challenges'),
+      collection(firebaseDb, 'challenges'),
       where('status', '==', 'active')
     );
     const challengesSnapshot = await getDocs(challengesQuery);
@@ -76,11 +87,11 @@ async function executeFailureCheckBatch() {
 
       try {
         // 昨日の成功報告があるかチェック
-        const successLogDoc = await getDoc(doc(db, 'successLogs', `${challengeId}_${yesterday}`));
+        const successLogDoc = await getDoc(doc(firebaseDb, 'successLogs', `${challengeId}_${yesterday}`));
 
         if (!successLogDoc.exists()) {
           // 成功報告がない場合は失敗処理
-          await updateDoc(doc(db, 'challenges', challengeId), {
+          await updateDoc(doc(firebaseDb, 'challenges', challengeId), {
             status: 'failed',
             failedAt: new Date(),
           });
@@ -96,7 +107,7 @@ async function executeFailureCheckBatch() {
 
           if (currentDay >= 30) {
             // 30日達成！
-            await updateDoc(doc(db, 'challenges', challengeId), {
+            await updateDoc(doc(firebaseDb, 'challenges', challengeId), {
               status: 'completed',
               completedAt: new Date(),
             });
